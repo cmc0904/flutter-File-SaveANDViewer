@@ -64,7 +64,9 @@ class _MainState extends State<Main> {
               if (snapshot.hasData) {
                 var d = snapshot.data;
                 var dataList = jsonDecode(d!) as List<dynamic>;
-
+                if (dataList.isEmpty) {
+                  return const Text("파일은 존재하지만 글은 없습니다.");
+                }
                 return ListView.separated(
                   itemBuilder: (context, index) {
                     var data = dataList[index] as Map<String, dynamic>;
@@ -73,7 +75,12 @@ class _MainState extends State<Main> {
                       title: Text(data['title']),
                       subtitle: Text(data['contents'],
                           style: const TextStyle(color: Colors.black)),
-                      trailing: const Icon(Icons.delete, color: Colors.red),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          deleteContent(index);
+                        },
+                      ),
                     );
                   },
                   separatorBuilder: (context, index) => const Divider(),
@@ -85,9 +92,38 @@ class _MainState extends State<Main> {
             },
           );
         });
+      } else {
+        setState(() {
+          myList = const Text("결과가 없습니다.");
+        });
       }
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<void> deleteFile() async {
+    try {
+      var file = File(filePath);
+      file.delete().then((value) => showList());
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  deleteContent(int index) async {
+    try {
+      var file = File(filePath);
+      String data = await file.readAsString();
+      var dataList = jsonDecode(data) as List<dynamic>;
+      dataList.removeAt(index);
+      await file
+          .writeAsString(jsonEncode(dataList))
+          .then((value) => showList());
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
     }
   }
 
@@ -98,11 +134,22 @@ class _MainState extends State<Main> {
         const SizedBox(
           height: 100,
         ),
-        ElevatedButton(
-          onPressed: () {
-            showList();
-          },
-          child: const Text("조회"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                showList();
+              },
+              child: const Text("조회"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                deleteFile();
+              },
+              child: const Text("삭제"),
+            ),
+          ],
         ),
         Expanded(child: myList),
       ]),
