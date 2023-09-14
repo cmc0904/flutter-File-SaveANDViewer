@@ -91,7 +91,10 @@ class _AddPageState extends State<AddPage> {
                     print('저장실패');
                   }
                 },
-                child: const Text('저장'),
+                child: Container(
+                    alignment: Alignment.center,
+                    width: double.infinity,
+                    child: const Text('저장')),
               ),
             ],
           ),
